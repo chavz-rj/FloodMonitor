@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Flood Monitor</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body data-token="__APP_TOKEN__">
+  <header class="topbar">
+    <div><h1>JP Laurel Flood Monitor</h1><p class="muted small">Offline decision-support tool</p></div>
+    <div class="top-actions">
+      <button id="op-chip" class="chip-btn" type="button" aria-label="Change operator name">👤</button>
+      <button id="btn-settings" class="icon-btn" type="button" aria-label="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <main id="views">
+    <!-- Menu 1: Warning Board (+ overall status) -->
+    <section id="view-board" class="view active" aria-label="Warning board">
+      <p id="startup-note" class="banner" role="status" hidden></p>
+      <div id="board-overall"></div>
+      <div id="board-list" class="cards"><p class="skeleton" role="status">Loading…</p></div>
+      <p class="muted small center"><span id="board-time"></span> · <button id="board-refresh" class="link-btn" type="button">Refresh</button></p>
+    </section>
+
+    <!-- Menu 2: Update Water Levels -->
+    <section id="view-update" class="view" aria-label="Update water level">
+      <form id="upd-form" class="card" novalidate>
+        <h2>Update water level</h2>
+        <p id="upd-operator" class="muted small"></p>
+        <label for="upd-segment">Segment</label>
+        <select id="upd-segment"></select>
+        <label for="upd-depth">New water depth (m)</label>
+        <input id="upd-depth" type="text" inputmode="decimal" autocomplete="off" placeholder="0.45">
+        <p id="upd-hint" class="muted small"></p>
+        <button id="upd-submit" class="btn" type="submit">Save reading</button>
+      </form>
+      <div id="upd-result" class="result-box" hidden role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- Weather feature (addition) -->
+    <section id="view-weather" class="view" aria-label="Weather">
+      <div class="card">
+        <label for="wx-search">Search city</label>
+        <input id="wx-search" type="search" autocomplete="off" placeholder="e.g. Lipa, Batangas">
+        <div id="wx-results" class="results" hidden></div>
+        <div class="row">
+          <button id="wx-locate" class="btn secondary" type="button">📍 Use my location</button>
+          <button id="wx-refresh" class="btn secondary" type="button">↻ Refresh</button>
+        </div>
+        <div id="wx-recents" class="chips" hidden></div>
+      </div>
+      <p id="wx-banner" class="banner" role="status" hidden></p>
+      <div id="wx-body"><p class="skeleton">Open this tab to load the weather.</p></div>
+    </section>
+
+    <!-- Menu 3, 4, 5 -->
+    <section id="view-insights" class="view" aria-label="Summary, history and statistics">
+      <div id="insight-tabs" class="segmented" role="tablist">
+        <button type="button" role="tab" data-insight="summary" aria-selected="true">Summary</button>
+        <button type="button" role="tab" data-insight="history" aria-selected="false">History</button>
+        <button type="button" role="tab" data-insight="statistics" aria-selected="false">Statistics</button>
+      </div>
+      <div id="pane-summary" class="insight-pane"></div>
+      <div id="pane-history" class="insight-pane" hidden></div>
+      <div id="pane-statistics" class="insight-pane" hidden></div>
+    </section>
+
+    <!-- Menu 6: Export Situation Report -->
+    <section id="view-report" class="view" aria-label="Situation report">
+      <div class="card">
+        <h2>Situation report</h2>
+        <p class="muted small">Creates the report and saves it as a text file in the app's storage.</p>
+        <button id="rep-btn" class="btn" type="button">Generate &amp; save report</button>
+      </div>
+      <div id="rep-out"></div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Main">
+    <button type="button" data-view="board" class="active" aria-current="page"><span aria-hidden="true">🚦</span><span class="tab-label">Board</span></button>
+    <button type="button" data-view="update"><span aria-hidden="true">✏️</span><span class="tab-label">Update</span></button>
+    <button type="button" data-view="weather"><span aria-hidden="true">⛅</span><span class="tab-label">Weather</span></button>
+    <button type="button" data-view="insights"><span aria-hidden="true">📊</span><span class="tab-label">Insights</span></button>
+    <button type="button" data-view="report"><span aria-hidden="true">📄</span><span class="tab-label">Report</span></button>
+  </nav>
+
+  <div id="dlg-operator" class="modal" role="dialog" aria-modal="true" aria-labelledby="op-title" hidden>
+    <form id="op-form" class="sheet">
+      <h2 id="op-title">Who is on duty?</h2>
+      <label for="op-input">Your name or badge number</label>
+      <input id="op-input" type="text" autocomplete="off">
+      <p id="op-error" class="error-text" hidden role="alert"></p>
+      <div class="row"><button id="op-skip" class="btn secondary" type="button">Skip for now</button><button class="btn" type="submit">Continue</button></div>
+    </form>
+  </div>
+
+  <div id="dlg-confirm" class="modal" role="alertdialog" aria-modal="true" aria-labelledby="cf-title" hidden>
+    <div class="sheet">
+      <h2 id="cf-title">Please check this reading</h2>
+      <p id="confirm-text"></p>
+      <div class="row"><button id="confirm-no" class="btn secondary" type="button">No, cancel</button><button id="confirm-yes" class="btn" type="button">Yes, it is correct</button></div>
+    </div>
+  </div>
+
+  <div id="dlg-settings" class="modal" role="dialog" aria-modal="true" aria-labelledby="st-title" hidden>
+    <div class="sheet">
+      <h2 id="st-title">Settings</h2>
+      <label for="set-theme">Theme</label>
+      <select id="set-theme"><option value="auto">Follow phone</option><option value="light">Light</option><option value="dark">Dark</option></select>
+      <label for="set-temp">Temperature</label>
+      <select id="set-temp"><option value="c">Celsius (°C)</option><option value="f">Fahrenheit (°F)</option></select>
+      <label for="set-wind">Wind speed</label>
+      <select id="set-wind"><option value="kmh">km/h</option><option value="mph">mph</option><option value="ms">m/s</option><option value="kn">knots</option></select>
+      <label for="set-clock">Clock</label>
+      <select id="set-clock"><option value="24">24-hour</option><option value="12">12-hour</option></select>
+      <button id="set-close" class="btn" type="button">Done</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="/js/backend.js"></script>
+  <script src="/js/settings.js"></script>
+  <script src="/js/weather.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
