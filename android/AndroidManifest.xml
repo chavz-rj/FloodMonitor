@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!-- Based on the Qt 6 manifest template. If your Qt version's template differs, in Qt Creator use
+     Projects > Build Steps > Build Android APK > "Create Templates", then re-apply the 3 marked edits. -->
+<manifest package="org.floodmonitor.app" xmlns:android="http://schemas.android.com/apk/res/android"
+    android:installLocation="auto"
+    android:versionCode="-- %%INSERT_VERSION_CODE%% --"
+    android:versionName="-- %%INSERT_VERSION_NAME%% --">
+
+    <!-- EDIT 1: permissions (weather needs the internet; location is optional and asked only on demand) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <supports-screens android:anyDensity="true" android:largeScreens="true"
+        android:normalScreens="true" android:smallScreens="true" android:xlargeScreens="true" />
+
+    <!-- EDIT 2: android:networkSecurityConfig on <application> -->
+    <application android:name="org.qtproject.qt.android.bindings.QtApplication"
+        android:hardwareAccelerated="true"
+        android:label="Flood Monitor"
+        android:icon="@mipmap/ic_launcher"
+        android:networkSecurityConfig="@xml/network_security_config">
+
+        <activity android:name="org.qtproject.qt.android.bindings.QtActivity"
+            android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc|density"
+            android:label="Flood Monitor"
+            android:launchMode="singleTop"
+            android:screenOrientation="unspecified"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true">
+            <!-- EDIT 3: adjustResize (above) keeps the keyboard from covering the depth field -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.lib_name" android:value="-- %%INSERT_APP_LIB_NAME%% --" />
+            <meta-data android:name="android.app.arguments" android:value="-- %%INSERT_APP_ARGUMENTS%% --" />
+            <meta-data android:name="android.app.extract_android_style" android:value="minimal" />
+        </activity>
+    </application>
+</manifest>
